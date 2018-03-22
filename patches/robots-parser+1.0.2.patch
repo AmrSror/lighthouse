@@ -5,12 +5,14 @@ patch-package
 -var libUrl   = require('url');
 +var URL   = (typeof self !== 'undefined' && self.URL) || require('url').URL;
 +// Add Fallback for Node 6, which doesn't have require('url').URL
-+var getPath;
++var getUrlPath;
++var parse;
 +if (typeof URL === 'undefined') {
-+  URL = require('url').parse;
-+  getPath = parsedUrl => parsedUrl.path;
++  parse = require('url').parse;
++  getUrlPath = parsedUrl => parsedUrl.path;
 +} else {
-+  getPath = parsedUrl => parsedUrl.pathname + parsedUrl.search;
++  parse = url => new URL(url);
++  getUrlPath = parsedUrl => parsedUrl.pathname + parsedUrl.search;
 +}
  var punycode = require('punycode');
  
@@ -20,7 +22,7 @@ patch-package
  
  function Robots(url, contents) {
 -	this._url = libUrl.parse(url);
-+	this._url = new URL(url);
++	this._url = parse(url);
  	this._url.port = this._url.port || 80;
  	this._url.hostname = punycode.toUnicode(this._url.hostname);
  
@@ -29,7 +31,7 @@ patch-package
   */
  Robots.prototype.isAllowed = function (url, ua) {
 -	var parsedUrl = libUrl.parse(url);
-+	var parsedUrl = new URL(url);
++	this._url = parse(url);
  	var userAgent = formatUserAgent(ua || '*');
  
  	parsedUrl.port = parsedUrl.port || 80;
